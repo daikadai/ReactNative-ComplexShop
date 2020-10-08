@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginHorizontal: 20
+    marginHorizontal: 20,
   },
   itemData: {
     flexDirection: 'row',
