@@ -1,10 +1,10 @@
 import React from "react";
 import { Button, FlatList, StyleSheet, Text, View } from "react-native";
-import { log } from "react-native-reanimated";
 import { useDispatch, useSelector } from "react-redux";
 import CartItem from "../../components/shop/CartItem";
 import Colors from "../../constants/Colors";
 import { removeFromCart } from "../../store/actions/cart";
+import { addOrder } from "../../store/actions/orders";
 
 const CartScreen = () => {
   const cartTotalAmount = useSelector((state) => state.cart.totalAmount);
@@ -32,6 +32,7 @@ const CartScreen = () => {
           <Text style={styles.amount}>${cartTotalAmount.toFixed(2)}</Text>
         </Text>
         <Button
+          onPress={() => dispatch(addOrder(cartItems, cartTotalAmount))}
           color={Colors.accent}
           title="Order Now"
           disabled={cartItems.length === 0}
