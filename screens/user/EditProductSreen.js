@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
+  Alert,
   Platform,
   ScrollView,
   StyleSheet,
@@ -20,6 +21,7 @@ const EditProductSreen = (props) => {
   const dispatch = useDispatch();
 
   const [title, setTitle] = useState(editedProduct ? editedProduct.title : "");
+  const [titleIsValid, setTitleIsValid] = useState(false);
   const [imageUrl, setImageUrl] = useState(
     editedProduct ? editedProduct.imageUrl : ""
   );
@@ -30,6 +32,12 @@ const EditProductSreen = (props) => {
 
 
   const submitHandler = useCallback(() => {
+    if(!titleIsValid) {
+      Alert.alert('Wrong input!', 'Please check the errors in the form',[
+        {text: 'Okay'}
+      ])
+      return;
+    }
     if(editedProduct) {
       dispatch(updateProduct(prodId, title, description, imageUrl))
     } else {
@@ -42,6 +50,15 @@ const EditProductSreen = (props) => {
     props.navigation.setParams({ submit: submitHandler });
   },[submitHandler])
 
+  const titleChangeHandler = text => {
+    if(text.trim().length === 0) {
+      setTitleIsValid(false)
+    } else {
+      setTitleIsValid(true)
+    }
+    setTitle(text);
+  }
+
   return (
     <ScrollView>
       <View style={styles.form}>
@@ -50,7 +67,7 @@ const EditProductSreen = (props) => {
           <TextInput
             style={styles.input}
             value={title}
-            onChangeText={(text) => setTitle(text)}
+            onChangeText={titleChangeHandler}
             keyboardType='default'
             autoCapitalize='sentences'
             autoCorrect
@@ -58,6 +75,7 @@ const EditProductSreen = (props) => {
             onEndEditing={() => console.log('onEndEditing')}
             onSubmitEditing={() => console.log('onSubmitEditing')}
           />
+          {!titleIsValid && <Text>Please enter a valid titlte !</Text>}
         </View>
         <View style={styles.formControl}>
           <Text style={styles.label}>Image URL</Text>
