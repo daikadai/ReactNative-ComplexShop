@@ -13,13 +13,34 @@ import { HeaderButtons, Item } from "react-navigation-header-buttons";
 import { useDispatch, useSelector } from "react-redux";
 import { createProduct, updateProduct } from "../../store/actions/product";
 
-const FORM_INPUT_UPDATE = 'FORM_INPUT_UPDATE';
+const FORM_INPUT_UPDATE = "FORM_INPUT_UPDATE";
 
 const formReducer = (state, action) => {
-  if(action.type === FORM_INPUT_UPDATE) {
+  if (action.type === FORM_INPUT_UPDATE) {
+    const updatedValues = {
+      ...state.inputValues,
+      [action.input]: action.value,
+    };
 
+    const updatedValidities = {
+      ...state.inputValidities,
+      [action.input]: action.isValid,
+    };
+
+    let updateFormIsValid = true;
+    for (const key in updatedValidities) {
+      updateFormIsValid = updateFormIsValid && updatedValidities[key];
+    }
+
+    return {
+      formIsValid: updateFormIsValid,
+      inputValidities: updatedValidities,
+      inputValues: updatedValues,
+    };
   }
-}
+
+  return state;
+};
 
 const EditProductSreen = (props) => {
   const prodId = props.navigation.getParam("productId");
@@ -29,11 +50,11 @@ const EditProductSreen = (props) => {
   const dispatch = useDispatch();
 
   const [formState, dispatchFormState] = useReducer(formReducer, {
-    inputValue: {
+    inputValues: {
       title: editedProduct ? editedProduct.title : "",
       imageUrl: editedProduct ? editedProduct.imageUrl : "",
       description: editedProduct ? editedProduct.description : "",
-      price: ''
+      price: "",
     },
     inputValidities: {
       title: editedProduct ? true : false,
@@ -41,31 +62,45 @@ const EditProductSreen = (props) => {
       description: editedProduct ? true : false,
       price: editedProduct ? true : false,
     },
-    formIsValid: editedProduct ? true : false 
-  })
+    formIsValid: editedProduct ? true : false,
+  });
 
   const submitHandler = useCallback(() => {
-    if(!titleIsValid) {
-      Alert.alert('Wrong input!', 'Please check the errors in the form',[
-        {text: 'Okay'}
-      ])
+    if (!formState.formIsValid) {
+      Alert.alert("Wrong input!", "Please check the errors in the form", [
+        { text: "Okay" },
+      ]);
       return;
     }
-    if(editedProduct) {
-      dispatch(updateProduct(prodId, title, description, imageUrl))
+    if (editedProduct) {
+      dispatch(
+        updateProduct(
+          prodId,
+          formState.inputValues.title,
+          formState.inputValues.description,
+          formState.inputValues.imageUrl
+        )
+      );
     } else {
-      dispatch(createProduct(title, description, imageUrl, +price))
+      dispatch(
+        createProduct(
+          formState.inputValues.title,
+          formState.inputValues.description,
+          formState.inputValues.imageUrl,
+          +formState.inputValues.price
+        )
+      );
     }
     props.navigation.goBack();
-  },[dispatch,prodId, title, description, imageUrl, price, titleIsValid])
+  }, [dispatch, prodId, formState]);
 
   useEffect(() => {
     props.navigation.setParams({ submit: submitHandler });
-  },[submitHandler])
+  }, [submitHandler]);
 
-  const titleChangeHandler = text => {
+  const textChangeHandler = (inputIdentifier, text) => {
     let isValid = false;
-    if(text.trim().length === 0) {
+    if (text.trim().length > 0) {
       isValid = true;
     }
 
@@ -73,9 +108,9 @@ const EditProductSreen = (props) => {
       type: FORM_INPUT_UPDATE,
       value: text,
       isValid: isValid,
-      input: 'title'
-    })
-  }
+      input: inputIdentifier,
+    });
+  };
 
   return (
     <ScrollView>
@@ -84,23 +119,23 @@ const EditProductSreen = (props) => {
           <Text style={styles.label}>Title</Text>
           <TextInput
             style={styles.input}
-            value={title}
-            onChangeText={titleChangeHandler}
-            keyboardType='default'
-            autoCapitalize='sentences'
+            value={formState.inputValues.title}
+            onChangeText={textChangeHandler.bind(this, "title")}
+            keyboardType="default"
+            autoCapitalize="sentences"
             autoCorrect
-            returnKeyType='next'
-            onEndEditing={() => console.log('onEndEditing')}
-            onSubmitEditing={() => console.log('onSubmitEditing')}
+            returnKeyType="next"
+            onEndEditing={() => console.log("onEndEditing")}
+            onSubmitEditing={() => console.log("onSubmitEditing")}
           />
-          {!titleIsValid && <Text>Please enter a valid titlte !</Text>}
+          {!formState.inputValidities.title && <Text>Please enter a valid titlte !</Text>} 
         </View>
         <View style={styles.formControl}>
           <Text style={styles.label}>Image URL</Text>
           <TextInput
             style={styles.input}
-            value={imageUrl}
-            onChangeText={(text) => setImageUrl(text)}
+            value={formState.inputValues.imageUrl}
+            onChangeText={textChangeHandler.bind(this, "imageUrl")}
           />
         </View>
         {editedProduct ? null : (
@@ -108,9 +143,9 @@ const EditProductSreen = (props) => {
             <Text style={styles.label}>Price</Text>
             <TextInput
               style={styles.input}
-              value={price}
-              onChangeText={(text) => setPrice(text)}
-              keyboardType='decimal-pad'
+              value={formState.inputValues.price}
+              onChangeText={textChangeHandler.bind(this, "price")}
+              keyboardType="decimal-pad"
             />
           </View>
         )}
@@ -118,8 +153,8 @@ const EditProductSreen = (props) => {
           <Text style={styles.label}>Description</Text>
           <TextInput
             style={styles.input}
-            value={description}
-            onChangeText={(text) => setDescription(text)}
+            value={formState.inputValues.description}
+            onChangeText={textChangeHandler.bind(this, "description")}
           />
         </View>
       </View>
@@ -128,7 +163,7 @@ const EditProductSreen = (props) => {
 };
 
 EditProductSreen.navigationOptions = (navData) => {
-  const submitFn = navData.navigation.getParam('submit');
+  const submitFn = navData.navigation.getParam("submit");
   return {
     headerTitle: navData.navigation.getParam("productId")
       ? "Edit Product"
