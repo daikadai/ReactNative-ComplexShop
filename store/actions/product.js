@@ -7,26 +7,34 @@ export const SET_PRODUCTS = "SET_PRODUCTS";
 
 export const fetchProducts = () => {
   return async (dispatch) => {
-    const response = await fetch(
-      "https://reactnative-shop-c671d.firebaseio.com/products.json"
-    );
-
-    const resData = await response.json();
-    const loadedProduct = [];
-
-    for (const key in resData) {
-      loadedProduct.push(
-        new Product(
-          key,
-          "u1",
-          resData[key].title,
-          resData[key].imageUrl,
-          resData[key].description,
-          resData[key].price
-        )
+    try {
+      const response = await fetch(
+        "https://reactnative-shop-c671d.firebaseio.com/products.json"
       );
+
+      if(!response.ok) {
+        throw new Error('Something went wrong!')
+      }
+  
+      const resData = await response.json();
+      const loadedProduct = [];
+  
+      for (const key in resData) {
+        loadedProduct.push(
+          new Product(
+            key,
+            "u1",
+            resData[key].title,
+            resData[key].imageUrl,
+            resData[key].description,
+            resData[key].price
+          )
+        );
+      }
+      dispatch({ type: SET_PRODUCTS, products: loadedProduct });
+    } catch (error) {
+      throw error
     }
-    dispatch({ type: SET_PRODUCTS, products: loadedProduct });
   };
 };
 
@@ -36,36 +44,41 @@ export const deleteProduct = (productId) => {
 
 export const createProduct = (title, description, imageUrl, price) => {
   return async (dispatch) => {
-    const response = await fetch(
-      "https://reactnative-shop-c671d.firebaseio.com/products.json",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+    try {
+      const response = await fetch(
+        "https://reactnative-shop-c671d.firebaseio.com/products.json",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title,
+            description,
+            imageUrl,
+            price,
+          }),
+        }
+      );
+
+      const resData = await response.json();
+
+      console.log(resData);
+
+      dispatch({
+        type: CREATE_PRODUCT,
+        productData: {
+          id: resData.name,
           title,
           description,
           imageUrl,
           price,
-        }),
-      }
-    );
-
-    const resData = await response.json();
-
-    console.log(resData);
-
-    dispatch({
-      type: CREATE_PRODUCT,
-      productData: {
-        id: resData.name,
-        title,
-        description,
-        imageUrl,
-        price,
-      },
-    });
+        },
+      });
+    } catch (error) {
+      //send to custom analytics server
+      throw error;
+    }
   };
 };
 
