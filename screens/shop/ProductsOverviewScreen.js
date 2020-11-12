@@ -15,7 +15,7 @@ const ProductsOverviewScreen = (props) => {
   const dispatch = useDispatch();
 
   const loadProducts = useCallback(async () => {
-    setError(null)
+    setError(null )
     setLoading(true)
     try {
       await dispatch(fetchProducts())
@@ -24,6 +24,14 @@ const ProductsOverviewScreen = (props) => {
     }
     setLoading(false)
   }, [dispatch, setLoading, setError])
+
+  useEffect(() => {
+    const willFocusSub = props.navigation.addListener('willFocus', loadProducts)
+
+    return () => {
+      willFocusSub()
+    }
+  }, [loadProducts])
 
   useEffect(() => {
     loadProducts();
