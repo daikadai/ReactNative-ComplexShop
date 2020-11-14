@@ -1,5 +1,7 @@
-import React, { useCallback, useReducer, useState } from "react";
+import React, { useCallback, useEffect, useReducer, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   Button,
   KeyboardAvoidingView,
   ScrollView,
@@ -43,30 +45,52 @@ const formReducer = (state, action) => {
 };
 
 const AuthScreen = () => {
-  const [isSignup, setIsSignup] = useState(false)
-  const dispatch = useDispatch()
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState();
+  const [isSignup, setIsSignup] = useState(false);
+  const dispatch = useDispatch();
 
   const [formState, dispatchFormState] = useReducer(formReducer, {
     inputValues: {
-      email: '',
-      password: ''
+      email: "",
+      password: "",
     },
     inputValidities: {
       email: false,
-      password: false
+      password: false,
     },
     formIsValid: false,
   });
 
-  const authHandler = () => {
-    let action
-    if(isSignup) {
-      action = signup(formState.inputValues.email, formState.inputValues.password)
+  useEffect(() => {
+   if(error) {
+     Alert.alert('An Error Occurred', error, [{ text: 'Okay'}])
+   }
+  }, [error])
+
+  const authHandler = async () => {
+    let action;
+    if (isSignup) {
+      action = signup(
+        formState.inputValues.email,
+        formState.inputValues.password
+      );
     } else {
-      action = login(formState.inputValues.email, formState.inputValues.password)
+      action = login(
+        formState.inputValues.email,
+        formState.inputValues.password
+      );
     }
-    dispatch(action)
-  }
+    setError(null)
+    setIsLoading(true);
+    try {
+      await dispatch(action);
+    } catch (error) {
+      setError(error.message)
+    }
+    
+    setIsLoading(false);
+  };
 
   const inputChangeHandler = useCallback(
     (inputIdentifier, inputValue, inputValidity) => {
@@ -80,7 +104,11 @@ const AuthScreen = () => {
     [dispatchFormState]
   );
   return (
-    <KeyboardAvoidingView keyboardVerticalOffset={50} behavior='padding' style={styles.screen}>
+    <KeyboardAvoidingView
+      keyboardVerticalOffset={50}
+      behavior="padding"
+      style={styles.screen}
+    >
       <LinearGradient colors={["#ffedff", "#ffe3ff"]} style={styles.gradient}>
         <Card style={styles.authContainer}>
           <ScrollView>
@@ -108,14 +136,22 @@ const AuthScreen = () => {
               initialValue=""
             />
             <View style={styles.buttonContainer}>
-              <Button title={isSignup ? "Sign Up" : "Login"} color={Colors.primary} onPress={authHandler} />
+              {isLoading ? (
+                <ActivityIndicator size='small' color={Colors.primary}/>
+              ) : (
+                <Button
+                  title={isSignup ? "Sign Up" : "Login"}
+                  color={Colors.primary}
+                  onPress={authHandler}
+                />
+              )}
             </View>
             <View style={styles.buttonContainer}>
               <Button
-                title={`Switch to ${isSignup ? 'Login' : 'Sign Up'}`}
+                title={`Switch to ${isSignup ? "Login" : "Sign Up"}`}
                 color={Colors.accent}
                 onPress={() => {
-                  setIsSignup(prevState => !prevState)
+                  setIsSignup((prevState) => !prevState);
                 }}
               />
             </View>
@@ -146,8 +182,8 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   buttonContainer: {
-    marginTop: 10
-  }
+    marginTop: 10,
+  },
 });
 
 export default AuthScreen;
