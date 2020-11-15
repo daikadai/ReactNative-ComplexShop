@@ -6,7 +6,8 @@ export const UPDATE_PRODUCT = "UPDATE_PRODUCT";
 export const SET_PRODUCTS = "SET_PRODUCTS";
 
 export const fetchProducts = () => {
-  return async (dispatch) => {
+  return async (dispatch, getState) => { 
+    const userId = getState().auth.userId
     try {
       const response = await fetch(
         "https://reactnative-shop-c671d.firebaseio.com/products.json"
@@ -23,15 +24,15 @@ export const fetchProducts = () => {
         loadedProduct.push(
           new Product(
             key,
-            "u1",
+            resData[key].ownerId,
             resData[key].title,
-            resData[key].imageUrl,
+            resData[key].imageUrl, 
             resData[key].description,
             resData[key].price
           )
         );
       }
-      dispatch({ type: SET_PRODUCTS, products: loadedProduct });
+      dispatch({ type: SET_PRODUCTS, products: loadedProduct, userProducts: loadedProduct.filter(prod => prod.ownerId === userId) });
     } catch (error) {
       throw error
     }
@@ -60,6 +61,7 @@ export const createProduct = (title, description, imageUrl, price) => {
   return async (dispatch,getState) => {
     try {
       const token = getState().auth.token
+      const userId = getState().auth.userId
       const response = await fetch(
         `https://reactnative-shop-c671d.firebaseio.com/products.json?auth=${token}`,
         {
@@ -72,6 +74,7 @@ export const createProduct = (title, description, imageUrl, price) => {
             description,
             imageUrl,
             price,
+            ownerId: userId
           }),
         }
       );
@@ -88,6 +91,7 @@ export const createProduct = (title, description, imageUrl, price) => {
           description,
           imageUrl,
           price,
+          ownerId: userId
         },
       });
     } catch (error) {

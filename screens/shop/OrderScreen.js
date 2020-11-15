@@ -25,6 +25,12 @@ const OrderScreen = () => {
     </View>
   }
 
+  if(orders.length === 0) {
+    return <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+      <Text>No order found, maybe start ordering some products ?</Text>
+    </View>
+  }
+
   return (
     <FlatList
       data={orders}
@@ -39,6 +45,8 @@ const OrderScreen = () => {
     />
   );
 };
+
+
 
 OrderScreen.navigationOptions = (navData) => {
   return {
