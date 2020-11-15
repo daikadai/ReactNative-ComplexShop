@@ -133,5 +133,6 @@ export const updateProduct = (id, title, description, imageUrl) => {
       },
     });
   }
-  
 };
+
+
